@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class UserRegisterLoginAddTest {
+public class UserRegisterLoginAddUpdateTest {
 
     private static String bearerToken;
 
@@ -110,6 +110,42 @@ public class UserRegisterLoginAddTest {
         assertEquals(USER2_FIRST_NAME, firstName);
         String lastName = response.jsonPath().getString("lastName");
         assertEquals(USER2_LAST_NAME, lastName);
+    }
+
+    @Order(4)
+    @Test
+    void testUpdateUser() {
+        Map<String, Object> userParameters = Map.of(
+                "currentUsername", USERNAME2,
+                "newFirstName", USER2_FIRST_NAME_UPD,
+                "newLastName", USER2_LAST_NAME_UPD,
+                "newUsername", USERNAME2,
+                "newEmail", EMAIL2_UPD,
+                "newRole", ROLE_ADMIN,
+                "newNotLocked", "true",
+                "newActive", "true"
+        );
+        final Response response = RestAssured
+                .given()
+                    .header(AUTHORIZATION, bearerToken)
+                    .params(userParameters)
+                .when()
+                    .put(USER_PREFIX + "/update")
+                .then()
+                    .statusCode(STATUS_OK)
+                    .contentType(APPLICATION_JSON)
+                    .extract()
+                    .response();
+        String userId = response.jsonPath().getString("userId");
+        assertNotNull(userId);
+        String firstName = response.jsonPath().getString("firstName");
+        assertEquals(USER2_FIRST_NAME_UPD, firstName);
+        String lastName = response.jsonPath().getString("lastName");
+        assertEquals(USER2_LAST_NAME_UPD, lastName);
+        String email = response.jsonPath().getString("email");
+        assertEquals(EMAIL2_UPD, email);
+        String role = response.jsonPath().getString("role");
+        assertEquals(ROLE_ADMIN, role);
     }
 
     private String readLoggedPassword() throws IOException {
