@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class UserRegisterLoginAddUpdateTest {
+public class UserRegisterLoginAddUpdateFindTest {
 
     private static String bearerToken;
 
@@ -146,6 +146,31 @@ public class UserRegisterLoginAddUpdateTest {
         assertEquals(EMAIL2_UPD, email);
         String role = response.jsonPath().getString("role");
         assertEquals(ROLE_ADMIN, role);
+    }
+
+    @Order(5)
+    @Test
+    void testFindByUsername() {
+        final Response response = RestAssured
+                .given()
+                    .header(AUTHORIZATION, bearerToken)
+                .when()
+                    .get(USER_PREFIX + "/find/" + USERNAME)
+                .then()
+                    .statusCode(STATUS_OK)
+                    .contentType(APPLICATION_JSON)
+                    .extract()
+                    .response();
+        String userId = response.jsonPath().getString("userId");
+        assertNotNull(userId);
+        String firstName = response.jsonPath().getString("firstName");
+        assertEquals(USER_FIRST_NAME, firstName);
+        String lastName = response.jsonPath().getString("lastName");
+        assertEquals(USER_LAST_NAME, lastName);
+        String email = response.jsonPath().getString("email");
+        assertEquals(EMAIL, email);
+        String role = response.jsonPath().getString("role");
+        assertEquals(ROLE_USER, role);
     }
 
     private String readLoggedPassword() throws IOException {
