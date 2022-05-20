@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class UserRegisterLoginTest {
+public class UserRegisterLoginResetPasswordTest {
 
     private static String jwtToken;
 
@@ -57,7 +57,7 @@ public class UserRegisterLoginTest {
     @Order(2)
     @Test
     void testLoginUser() throws IOException {
-        String password = readLoggedPassword();
+        String password = readLoggedPassword("Registered New User password ");
 
         Map<String, Object> loginData = Map.of(
                 "username", USERNAME,
@@ -80,10 +80,51 @@ public class UserRegisterLoginTest {
         assertNotNull(jwtToken);
     }
 
-    private String readLoggedPassword() throws IOException {
+    @Order(3)
+    @Test
+    void testResetPassword() {
+        final Response response = RestAssured
+                .when()
+                    .put(USER_PREFIX + "/resetPassword/" + EMAIL)
+                .then()
+                    .statusCode(STATUS_OK)
+                    .contentType(APPLICATION_JSON)
+                    .extract()
+                    .response();
+        String httpStatus = response.jsonPath().getString("httpStatus");
+        assertNotNull(httpStatus);
+        assertEquals("OK", httpStatus);
+    }
+
+    @Order(4)
+    @Test
+    void testLoginUserAfterReset() throws IOException {
+        String password = readLoggedPassword("Password reset to ");
+
+        Map<String, Object> loginData = Map.of(
+                "username", USERNAME,
+                "password", password
+        );
+        final Response response = RestAssured
+                .given()
+                    .contentType(APPLICATION_JSON)
+                    .body(loginData)
+                .when()
+                    .post(USER_PREFIX + "/login")
+                .then()
+                    .statusCode(STATUS_OK)
+                    .contentType(APPLICATION_JSON)
+                    .extract()
+                    .response();
+        String userId = response.jsonPath().getString("userId");
+        assertNotNull(userId);
+        jwtToken = response.header("Jwt-Token");
+        assertNotNull(jwtToken);
+    }
+
+    private String readLoggedPassword(String key) throws IOException {
         final String userHome = System.getProperty("user.home");
         Path logPath = Paths.get(userHome, "/logs/umsportal/spring.log");
-        final String key = "Registered New User password ";
         List<String> lines = Files.readAllLines(logPath)
                 .stream().filter(line -> line.contains(key)).collect(Collectors.toList());
         if (lines.isEmpty()) {
