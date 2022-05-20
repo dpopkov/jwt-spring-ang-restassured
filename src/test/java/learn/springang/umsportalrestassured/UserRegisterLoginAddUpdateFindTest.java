@@ -5,14 +5,10 @@ import io.restassured.response.Response;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static learn.springang.umsportalrestassured.TestConstants.*;
+import static learn.springang.umsportalrestassured.Util.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -57,7 +53,7 @@ public class UserRegisterLoginAddUpdateFindTest {
     @Order(2)
     @Test
     void testLoginUser() throws IOException {
-        String password = readLoggedPassword();
+        String password = readLoggedPassword(REGISTERED_PASSWORD_PHRASE);
 
         Map<String, Object> loginData = Map.of(
                 "username", USERNAME,
@@ -171,18 +167,5 @@ public class UserRegisterLoginAddUpdateFindTest {
         assertEquals(EMAIL, email);
         String role = response.jsonPath().getString("role");
         assertEquals(ROLE_USER, role);
-    }
-
-    private String readLoggedPassword() throws IOException {
-        final String userHome = System.getProperty("user.home");
-        Path logPath = Paths.get(userHome, "/logs/umsportal/spring.log");
-        final String key = "Registered New User password ";
-        List<String> lines = Files.readAllLines(logPath)
-                .stream().filter(line -> line.contains(key)).collect(Collectors.toList());
-        if (lines.isEmpty()) {
-            throw new IllegalStateException("Cannot find any lines containing password");
-        }
-        String lastFoundLine = lines.get(lines.size() - 1);
-        return lastFoundLine.substring(lastFoundLine.indexOf(key) + key.length());
     }
 }

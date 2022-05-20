@@ -5,14 +5,10 @@ import io.restassured.response.Response;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static learn.springang.umsportalrestassured.TestConstants.*;
+import static learn.springang.umsportalrestassured.Util.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -57,7 +53,7 @@ public class UserRegisterLoginResetPasswordTest {
     @Order(2)
     @Test
     void testLoginUser() throws IOException {
-        String password = readLoggedPassword("Registered New User password ");
+        String password = readLoggedPassword(REGISTERED_PASSWORD_PHRASE);
 
         Map<String, Object> loginData = Map.of(
                 "username", USERNAME,
@@ -99,7 +95,7 @@ public class UserRegisterLoginResetPasswordTest {
     @Order(4)
     @Test
     void testLoginUserAfterReset() throws IOException {
-        String password = readLoggedPassword("Password reset to ");
+        String password = readLoggedPassword(RESET_PASSWORD_PHRASE);
 
         Map<String, Object> loginData = Map.of(
                 "username", USERNAME,
@@ -120,17 +116,5 @@ public class UserRegisterLoginResetPasswordTest {
         assertNotNull(userId);
         jwtToken = response.header("Jwt-Token");
         assertNotNull(jwtToken);
-    }
-
-    private String readLoggedPassword(String key) throws IOException {
-        final String userHome = System.getProperty("user.home");
-        Path logPath = Paths.get(userHome, "/logs/umsportal/spring.log");
-        List<String> lines = Files.readAllLines(logPath)
-                .stream().filter(line -> line.contains(key)).collect(Collectors.toList());
-        if (lines.isEmpty()) {
-            throw new IllegalStateException("Cannot find any lines containing password");
-        }
-        String lastFoundLine = lines.get(lines.size() - 1);
-        return lastFoundLine.substring(lastFoundLine.indexOf(key) + key.length());
     }
 }
