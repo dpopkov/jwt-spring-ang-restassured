@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 public class Util {
 
     public static final String REGISTERED_PASSWORD_PHRASE = "Registered New User password ";
+    public static final String ADDED_USER_PASSWORD_PHRASE = "Added New User password ";
     public static final String RESET_PASSWORD_PHRASE = "Password reset to ";
 
     private static final String LOG_FILE_NAME_IN_HOME_DIR = "/logs/umsportal/spring.log";

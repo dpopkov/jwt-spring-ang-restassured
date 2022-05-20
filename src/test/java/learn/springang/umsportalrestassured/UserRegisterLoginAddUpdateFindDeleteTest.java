@@ -9,13 +9,13 @@ import java.util.Map;
 
 import static learn.springang.umsportalrestassured.TestConstants.*;
 import static learn.springang.umsportalrestassured.Util.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class UserRegisterLoginAddUpdateFindTest {
+public class UserRegisterLoginAddUpdateFindDeleteTest {
 
     private static String bearerToken;
+    private static int firstUserId;
 
     @BeforeEach
     void setUp() {
@@ -48,6 +48,8 @@ public class UserRegisterLoginAddUpdateFindTest {
         String role = response.jsonPath().getString("role");
         assertNotNull(role);
         assertEquals(ROLE_USER, role);
+        firstUserId = response.jsonPath().getInt("id");
+        assertTrue(firstUserId > 0);
     }
 
     @Order(2)
@@ -117,7 +119,7 @@ public class UserRegisterLoginAddUpdateFindTest {
                 "newLastName", USER2_LAST_NAME_UPD,
                 "newUsername", USERNAME2,
                 "newEmail", EMAIL2_UPD,
-                "newRole", ROLE_ADMIN,
+                "newRole", ROLE_SUPER_ADMIN,
                 "newNotLocked", "true",
                 "newActive", "true"
         );
@@ -141,7 +143,7 @@ public class UserRegisterLoginAddUpdateFindTest {
         String email = response.jsonPath().getString("email");
         assertEquals(EMAIL2_UPD, email);
         String role = response.jsonPath().getString("role");
-        assertEquals(ROLE_ADMIN, role);
+        assertEquals(ROLE_SUPER_ADMIN, role);
     }
 
     @Order(5)
@@ -167,5 +169,38 @@ public class UserRegisterLoginAddUpdateFindTest {
         assertEquals(EMAIL, email);
         String role = response.jsonPath().getString("role");
         assertEquals(ROLE_USER, role);
+    }
+
+    @Order(6)
+    @Test
+    void testDeleteUser() throws IOException {
+        String superAdminPassword = readLoggedPassword(ADDED_USER_PASSWORD_PHRASE);
+        Map<String, Object> loginData = Map.of(
+                "username", USERNAME2,
+                "password", superAdminPassword
+        );
+        Response response = RestAssured
+                .given()
+                    .contentType(APPLICATION_JSON)
+                    .body(loginData)
+                .when()
+                    .post(USER_PREFIX + "/login")
+                .then()
+                    .statusCode(STATUS_OK)
+                    .contentType(APPLICATION_JSON)
+                    .extract()
+                    .response();
+        String username = response.jsonPath().getString("username");
+        assertEquals(USERNAME2, username);
+        String jwtToken = response.header("Jwt-Token");
+        assertNotNull(jwtToken);
+        String superAdminBearerToken = "Bearer " + jwtToken;
+        RestAssured
+                .given()
+                    .header(AUTHORIZATION, superAdminBearerToken)
+                .when()
+                    .delete(USER_PREFIX + "/delete/" + firstUserId)
+                .then()
+                    .statusCode(STATUS_NO_CONTENT);
     }
 }
